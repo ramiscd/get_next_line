@@ -6,7 +6,7 @@
 /*   By: rdamasce <rdamasce@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 22:38:26 by rdamasce          #+#    #+#             */
-/*   Updated: 2025/10/21 23:13:32 by rdamasce         ###   ########.fr       */
+/*   Updated: 2025/10/21 23:30:07 by rdamasce         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,13 +144,11 @@ char	*get_next_line(int fd)
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-
 	// inicia string vazia e buffer
 	file_content = ft_strdup("");
 	buffer = malloc(BUFFER_SIZE + 1);
 	if (!buffer || !file_content)
 		return (NULL);
-
 	// concatena o resto anterior, se existir
 	if (rest)
 	{
@@ -160,7 +158,6 @@ char	*get_next_line(int fd)
 		free(rest);
 		rest = NULL;
 	}
-
 	// lê do arquivo até achar '\n' ou EOF
 	read_count = 1;
 	while (!ft_strchr(file_content, '\n') && read_count > 0)
@@ -177,7 +174,6 @@ char	*get_next_line(int fd)
 		file_content = ft_strjoin(file_content, buffer);
 		free(temp);
 	}
-
 	free(buffer);
 
 	// fim do arquivo e nada pra retornar
@@ -186,7 +182,6 @@ char	*get_next_line(int fd)
 		free(file_content);
 		return (NULL);
 	}
-
 	// separa linha e resto
 	newline_ptr = ft_strchr(file_content, '\n');
 	if (newline_ptr)
@@ -200,7 +195,6 @@ char	*get_next_line(int fd)
 		line = ft_strdup(file_content);
 		rest = NULL;
 	}
-
 	free(file_content);
 	if (!line || line[0] == '\0')
 	{
@@ -211,15 +205,14 @@ char	*get_next_line(int fd)
 }
 
 #include <fcntl.h>
-int main(void)
+int	main(void)
 {
-	int fd;
-	char *line;
+	int		fd;
+	char	*line;
 
 	fd = open("test.txt", O_RDONLY);
 	if (fd < 0)
 		return (perror("erro ao abrir arquivo"), 1);
-
 	while ((line = get_next_line(fd)))
 	{
 		printf("%s", line);
