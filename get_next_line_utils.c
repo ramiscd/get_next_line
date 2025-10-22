@@ -6,8 +6,9 @@
 /*   By: rdamasce <rdamasce@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 22:38:14 by rdamasce          #+#    #+#             */
-/*   Updated: 2025/10/10 22:39:44 by rdamasce         ###   ########.fr       */
+/*   Updated: 2025/10/21 23:23:01 by rdamasce         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "get_next_line.h"
 /* Add functions that's you will need */

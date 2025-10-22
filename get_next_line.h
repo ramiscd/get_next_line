@@ -6,12 +6,28 @@
 /*   By: rdamasce <rdamasce@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 22:38:31 by rdamasce          #+#    #+#             */
-/*   Updated: 2025/10/15 23:16:21 by rdamasce         ###   ########.fr       */
+/*   Updated: 2025/10/21 22:59:06 by rdamasce         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// Add the prototyoes
+#ifndef GET_NEXT_LINE
+# define GET_NEXT_LINE
 
-#define BUFFER_SIZE=8; // Quantos blocos vão ser lidos de cada vez.
+# ifndef BUFFER_SIZE
+#  define BUFFER_SIZE 8
+# endif
 
-char *get_next_line(int fd);
+# include <stdlib.h>
+# include <unistd.h>
+# include <limits.h>
+# include <stdio.h>
+
+char	*get_next_line(int fd);
+char	*ft_strdup(const char *string);
+char	*ft_substr(char const *s, unsigned int start, size_t len);
+char	*ft_strchr(const char *string, int c);
+char	*ft_strjoin(char *s1, char *s2);
+size_t	ft_strlcpy(char *dest, const char *src, size_t size);
+size_t	ft_strlen(const char *str);
+
+#endif

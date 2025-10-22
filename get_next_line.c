@@ -6,14 +6,11 @@
 /*   By: rdamasce <rdamasce@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 22:38:26 by rdamasce          #+#    #+#             */
-/*   Updated: 2025/10/20 23:12:46 by rdamasce         ###   ########.fr       */
+/*   Updated: 2025/10/21 23:13:32 by rdamasce         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "get_next_line.h"
 
 size_t	ft_strlen(const char *str)
 {
@@ -108,53 +105,126 @@ char	*ft_strchr(const char *string, int c)
 	return (NULL);
 }
 
-int main()
+char	*ft_strjoin(char *s1, char *s2)
 {
-	int fd; // Aonde será armazenado o numero do file descriptor.
-	int i; // armazena index do arquivo que vamos iterar
-	char* file_content = (char*)calloc(100, sizeof(char));
-	int total = 0;
+	int		count1;
+	int		count2;
+	int		total;
+	int		i;
+	char	*join;
+
+	count1 = ft_strlen(s1);
+	count2 = ft_strlen(s2);
+	total = count1 + count2;
+	join = (char *)malloc((total + 1) * sizeof(char));
+	if (!join)
+		return (NULL);
+	i = 0;
+	while (s1[i] != '\0')
+	{
+		join[i] = s1[i];
+		i++;
+	}
+	count2 = 0;
+	while (s2[count2] != '\0')
+		join[i++] = s2[count2++];
+	join[i] = '\0';
+	return (join);
+}
+
+char	*get_next_line(int fd)
+{
+	static char	*rest;             // guarda o conteúdo que sobrou da última chamada
+	char		*file_content;     // conteúdo acumulado da leitura
+	char		*buffer;           // leitura temporária
+	char		*line;             // linha a retornar
+	char		*newline_ptr;      // ponteiro para '\n'
+	int			read_count;
+	size_t		index;
+
+	if (fd < 0 || BUFFER_SIZE <= 0)
+		return (NULL);
+
+	// inicia string vazia e buffer
+	file_content = ft_strdup("");
+	buffer = malloc(BUFFER_SIZE + 1);
+	if (!buffer || !file_content)
+		return (NULL);
+
+	// concatena o resto anterior, se existir
+	if (rest)
+	{
+		char *temp = file_content;
+		file_content = ft_strjoin(rest, file_content);
+		free(temp);
+		free(rest);
+		rest = NULL;
+	}
+
+	// lê do arquivo até achar '\n' ou EOF
+	read_count = 1;
+	while (!ft_strchr(file_content, '\n') && read_count > 0)
+	{
+		read_count = read(fd, buffer, BUFFER_SIZE);
+		if (read_count < 0)
+		{
+			free(buffer);
+			free(file_content);
+			return (NULL);
+		}
+		buffer[read_count] = '\0';
+		char *temp = file_content;
+		file_content = ft_strjoin(file_content, buffer);
+		free(temp);
+	}
+
+	free(buffer);
+
+	// fim do arquivo e nada pra retornar
+	if (read_count == 0 && file_content[0] == '\0')
+	{
+		free(file_content);
+		return (NULL);
+	}
+
+	// separa linha e resto
+	newline_ptr = ft_strchr(file_content, '\n');
+	if (newline_ptr)
+	{
+		index = newline_ptr - file_content;
+		line = ft_substr(file_content, 0, index + 1);
+		rest = ft_substr(file_content, index + 1, ft_strlen(file_content) - index - 1);
+	}
+	else
+	{
+		line = ft_strdup(file_content);
+		rest = NULL;
+	}
+
+	free(file_content);
+	if (!line || line[0] == '\0')
+	{
+		free(line);
+		line = NULL;
+	}
+	return (line);
+}
+
+#include <fcntl.h>
+int main(void)
+{
+	int fd;
+	char *line;
 
 	fd = open("test.txt", O_RDONLY);
-	
-	if (fd < 0) {
-		perror("erro ao abrir arquivo");
-		exit(1);
-	}
-	printf("arquivo aberto com sucesso, fd=%i \n", fd);
+	if (fd < 0)
+		return (perror("erro ao abrir arquivo"), 1);
 
-	/*	while (fd)
+	while ((line = get_next_line(fd)))
 	{
-		read(fd, file_content, 8);
-		printf("conteudo: %s", file_content);
-	} */
-
-	i = 0;
-	// primeira chamada
-	i = read(fd, file_content + total, 8);
-	total += i;
-	printf("conteudo 1ª chamada: %s \n", file_content);
-
-	
-	//Obter ponteiro do resto
-	char *n1_ptr = ft_strchr(file_content, '\n');
-	printf("caractere do conteudo ft_strchr: %s \n", n1_ptr);
-
-	// se o conteudo tiver uma quebra de linha preciso copiar o "resto" do conteudo para uma variavel temporaria, se nao, continuar iteracao.
-	int size = ft_strlen(file_content);
-	printf("O tamanho da string depois da primeira iteracao: %i\n", size);
-
-	unsigned int index = n1_ptr - file_content;
-	printf("indice: %i \n", index);
-
-	// passar conteudo do resto
-	char *rest = ft_substr(file_content, index, size);
-	printf("contrudo do resto: %s \n", rest);
-
-	
-
-	// segunda chamada
-/* 	i = read(fd, file_content + total, 2);
-	total += i;
-	printf("conteudo 1ª chamada: %s \n:", file_content); */
+		printf("%s", line);
+		free(line);
+	}
+	close(fd);
+	return (0);
 }
