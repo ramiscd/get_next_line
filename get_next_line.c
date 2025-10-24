@@ -6,7 +6,7 @@
 /*   By: rdamasce <rdamasce@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 22:38:26 by rdamasce          #+#    #+#             */
-/*   Updated: 2025/10/23 22:29:30 by rdamasce         ###   ########.fr       */
+/*   Updated: 2025/10/24 19:27:44 by rdamasce         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,11 @@ static char	*ft_read_file(int fd, char *file_content)
 	{
 		read_count = read(fd, buffer, BUFFER_SIZE);
 		if (read_count < 0)
-			return (free(buffer), free(file_content), NULL);
+		{
+			free(buffer);
+			free(file_content);
+			return (NULL);
+		}
 		buffer[read_count] = '\0';
 		temp = file_content;
 		file_content = ft_strjoin(file_content, buffer);
@@ -153,7 +157,8 @@ char	*get_next_line(int fd)
 		return (free(file_content), NULL);
 	line = ft_extract_line(file_content);
 	rest = ft_extract_rest(file_content);
-	return (free(file_content), line);
+	free(file_content);
+	return (line);
 }
 
 /* #include <fcntl.h>
