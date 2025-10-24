@@ -6,205 +6,157 @@
 /*   By: rdamasce <rdamasce@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 22:38:26 by rdamasce          #+#    #+#             */
-/*   Updated: 2025/10/21 23:30:07 by rdamasce         ###   ########.fr       */
+/*   Updated: 2025/10/23 22:29:30 by rdamasce         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-size_t	ft_strlen(const char *str)
+size_t	ft_strlen(const char *s)
 {
-	int	i;
+	size_t	i;
 
 	i = 0;
-	while (str[i] != '\0')
-	{
+	while (s[i])
 		i++;
-	}
 	return (i);
 }
 
-char	*ft_strdup(const char *string)
+/**
+ * @brief Reads the file content until a newline or EOF is found.
+ *
+ * This function reads from the file descriptor `fd` into a temporary buffer,
+ * appending the data to `file_content` until it finds a
+ * newline character (`'\n'`) or reaches the end of the file.
+ * It dynamically allocates memory as needed.
+ *
+ * @param fd The file descriptor to read from.
+ * @param file_content A string containing previously read data (may be empty).
+ * @return A pointer to the updated file_content string containing the read data,
+ *         or NULL if an error occurs.
+ */
+static char	*ft_read_file(int fd, char *file_content)
 {
-	char	*ptr;
-	int		i;
+	char	*buffer;
+	char	*temp;
+	int		read_count;
 
-	i = 0;
-	ptr = (char *) malloc(ft_strlen((char *)string) * sizeof(char) + 1);
-	if (ptr == NULL)
-	{
-		return (NULL);
-	}
-	else
-	{
-		while (string[i] != '\0')
-		{
-			ptr[i] = string[i];
-			i++;
-		}
-	}
-	ptr[i] = '\0';
-	return (ptr);
-}
-
-size_t	ft_strlcpy(char *dest, const char *src, size_t size)
-{
-	size_t	i;
-	size_t	size_src;
-
-	i = 0;
-	size_src = ft_strlen(src);
-	if (!size)
-		return (size_src);
-	i = 0;
-	while (i < (size - 1) && src[i])
-	{
-		dest[i] = src[i];
-		i ++;
-	}
-	dest[i] = 0;
-	return (size_src);
-}
-
-char	*ft_substr(char const *s, unsigned int start, size_t len)
-{
-	char			*str;
-	size_t			max_len;
-
-	if (start > ft_strlen(s))
-	{
-		return (ft_strdup(""));
-	}
-	max_len = ft_strlen(s) - start;
-	if (len < max_len)
-	{
-		max_len = len;
-	}
-	str = (char *) malloc((max_len + 1) * sizeof(char));
-	if (!str)
-	{
-		return (NULL);
-	}
-	ft_strlcpy(str, s + start, max_len + 1);
-	return (str);
-}
-
-char	*ft_strchr(const char *string, int c)
-{
-	unsigned char	uc;
-
-	uc = (unsigned char)c;
-	while (*string)
-	{
-		if ((unsigned char)*string == uc)
-			return ((char *)string);
-		string++;
-	}
-	if ((unsigned char)*string == uc)
-		return ((char *)string);
-	return (NULL);
-}
-
-char	*ft_strjoin(char *s1, char *s2)
-{
-	int		count1;
-	int		count2;
-	int		total;
-	int		i;
-	char	*join;
-
-	count1 = ft_strlen(s1);
-	count2 = ft_strlen(s2);
-	total = count1 + count2;
-	join = (char *)malloc((total + 1) * sizeof(char));
-	if (!join)
-		return (NULL);
-	i = 0;
-	while (s1[i] != '\0')
-	{
-		join[i] = s1[i];
-		i++;
-	}
-	count2 = 0;
-	while (s2[count2] != '\0')
-		join[i++] = s2[count2++];
-	join[i] = '\0';
-	return (join);
-}
-
-char	*get_next_line(int fd)
-{
-	static char	*rest;             // guarda o conteúdo que sobrou da última chamada
-	char		*file_content;     // conteúdo acumulado da leitura
-	char		*buffer;           // leitura temporária
-	char		*line;             // linha a retornar
-	char		*newline_ptr;      // ponteiro para '\n'
-	int			read_count;
-	size_t		index;
-
-	if (fd < 0 || BUFFER_SIZE <= 0)
-		return (NULL);
-	// inicia string vazia e buffer
-	file_content = ft_strdup("");
 	buffer = malloc(BUFFER_SIZE + 1);
-	if (!buffer || !file_content)
+	if (!buffer)
 		return (NULL);
-	// concatena o resto anterior, se existir
-	if (rest)
-	{
-		char *temp = file_content;
-		file_content = ft_strjoin(rest, file_content);
-		free(temp);
-		free(rest);
-		rest = NULL;
-	}
-	// lê do arquivo até achar '\n' ou EOF
 	read_count = 1;
 	while (!ft_strchr(file_content, '\n') && read_count > 0)
 	{
 		read_count = read(fd, buffer, BUFFER_SIZE);
 		if (read_count < 0)
-		{
-			free(buffer);
-			free(file_content);
-			return (NULL);
-		}
+			return (free(buffer), free(file_content), NULL);
 		buffer[read_count] = '\0';
-		char *temp = file_content;
+		temp = file_content;
 		file_content = ft_strjoin(file_content, buffer);
 		free(temp);
 	}
 	free(buffer);
+	return (file_content);
+}
 
-	// fim do arquivo e nada pra retornar
-	if (read_count == 0 && file_content[0] == '\0')
-	{
-		free(file_content);
+/**
+ * @brief Extracts the current line from the file content.
+ *
+ * This function searches for the first newline character in `file_content`
+ * and copies everything up to (and including) that newline into a new string.
+ * If no newline is found, it duplicates the entire `file_content`.
+ *
+ * @param file_content The full text read so far from the file.
+ * @return A newly allocated string containing the next line,
+ *         or NULL if no content is available.
+ */
+static char	*ft_extract_line(char *file_content)
+{
+	char	*line;
+	char	*nl_ptr;
+	size_t	index;
+
+	if (!file_content || !*file_content)
 		return (NULL);
-	}
-	// separa linha e resto
-	newline_ptr = ft_strchr(file_content, '\n');
-	if (newline_ptr)
+	nl_ptr = ft_strchr(file_content, '\n');
+	if (nl_ptr)
 	{
-		index = newline_ptr - file_content;
+		index = nl_ptr - file_content;
 		line = ft_substr(file_content, 0, index + 1);
-		rest = ft_substr(file_content, index + 1, ft_strlen(file_content) - index - 1);
 	}
 	else
-	{
 		line = ft_strdup(file_content);
-		rest = NULL;
-	}
-	free(file_content);
-	if (!line || line[0] == '\0')
-	{
-		free(line);
-		line = NULL;
-	}
 	return (line);
 }
 
-#include <fcntl.h>
+/**
+ * @brief Extracts the remaining part of the file after the first newline.
+ *
+ * After a line has been extracted, this function saves the leftover
+ * text (everything after the newline) for the next call to get_next_line.
+ * If there is no remaining text, it returns NULL.
+ *
+ * @param file_content The full text read from the file.
+ * @return A newly allocated string containing the remaining text,
+ *         or NULL if there is nothing left.
+ */
+static char	*ft_extract_rest(char *file_content)
+{
+	char	*rest;
+	char	*nl_ptr;
+	size_t	index;
+
+	nl_ptr = ft_strchr(file_content, '\n');
+	if (!nl_ptr)
+		return (NULL);
+	index = nl_ptr - file_content;
+	rest = ft_substr(file_content, index + 1,
+			ft_strlen(file_content) - index - 1);
+	if (!*rest)
+		return (free(rest), NULL);
+	return (rest);
+}
+
+/**
+ * @brief Reads and returns the next line from a file descriptor.
+ *
+ * This is the main function of the get_next_line project.
+ * It reads from the file descriptor `fd` and returns one line at a time,
+ * including the newline character if present.
+ *
+ * Between calls, it keeps track of leftover text using a static variable,
+ * allowing it to continue reading from where it left off.
+ *
+ * @param fd The file descriptor to read from.
+ * @return A string containing the next line, or NULL if EOF or an error occurs.
+ */
+char	*get_next_line(int fd)
+{
+	static char	*rest;
+	char		*file_content;
+	char		*line;
+	char		*temp;
+
+	if (fd < 0 || BUFFER_SIZE <= 0)
+		return (NULL);
+	file_content = ft_strdup("");
+	if (rest)
+	{
+		temp = file_content;
+		file_content = ft_strjoin(rest, file_content);
+		free(temp);
+		free(rest);
+		rest = NULL;
+	}
+	file_content = ft_read_file(fd, file_content);
+	if (!file_content || !*file_content)
+		return (free(file_content), NULL);
+	line = ft_extract_line(file_content);
+	rest = ft_extract_rest(file_content);
+	return (free(file_content), line);
+}
+
+/* #include <fcntl.h>
 int	main(void)
 {
 	int		fd;
@@ -212,7 +164,7 @@ int	main(void)
 
 	fd = open("test.txt", O_RDONLY);
 	if (fd < 0)
-		return (perror("erro ao abrir arquivo"), 1);
+		return (perror("error to open the file"), 1);
 	while ((line = get_next_line(fd)))
 	{
 		printf("%s", line);
@@ -220,4 +172,4 @@ int	main(void)
 	}
 	close(fd);
 	return (0);
-}
+} */
